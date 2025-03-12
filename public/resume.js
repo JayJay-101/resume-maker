@@ -488,40 +488,53 @@ class SectionManager {
     }
     
     setupSkillItemEvents(skillItem, index, skillsList) {
+        // Flag to prevent duplicate processing
+        let processingPaste = false;
+        
         // Handle backspace to delete empty skills (except the first one)
         skillItem.addEventListener('keydown', (e) => {
-            if (e.key === 'Backspace' && skillItem.textContent.trim() === '' && index > 0) {
+            if (e.key === 'Backspace' && skillItem.textContent.trim() === '') {
                 // Don't delete if it's the first skill
                 if (skillItem === skillsList.querySelector('.skill-item:first-child')) {
                     return;
                 }
                 
                 e.preventDefault();
-                skillItem.remove();
                 
-                // Focus previous skill
-                const skills = skillsList.querySelectorAll('.skill-item');
-                if (skills.length > 0 && index > 0) {
-                    const prevSkill = index - 1 < skills.length ? skills[index - 1] : skills[skills.length - 1];
-                    prevSkill.focus();
+                // Get all skills BEFORE removing the current one
+                const allSkills = Array.from(skillsList.querySelectorAll('.skill-item'));
+                const currentIndex = allSkills.indexOf(skillItem);
+                
+                if (currentIndex > 0) {
+                    const prevSkill = allSkills[currentIndex - 1];
                     
-                    // Place cursor at the end
-                    const range = document.createRange();
-                    const sel = window.getSelection();
-                    range.selectNodeContents(prevSkill);
-                    range.collapse(false);
-                    sel.removeAllRanges();
-                    sel.addRange(range);
+                    // Remove the current skill
+                    skillItem.remove();
+                    
+                    // Focus the previous skill
+                    setTimeout(() => {
+                        prevSkill.focus();
+                        
+                        // Place cursor at the end
+                        const range = document.createRange();
+                        const sel = window.getSelection();
+                        range.selectNodeContents(prevSkill);
+                        range.collapse(false);
+                        sel.removeAllRanges();
+                        sel.addRange(range);
+                    }, 10);
                 }
             }
         });
         
         // Handle comma to create new skills
         skillItem.addEventListener('input', (e) => {
+            // Ignore if we're processing a paste operation
+            if (processingPaste) return;
+            
             const content = skillItem.textContent;
+            
             if (content.includes(',')) {
-                e.preventDefault();
-                
                 const parts = content.split(',');
                 skillItem.textContent = parts[0].trim();
                 
@@ -540,7 +553,7 @@ class SectionManager {
                 }
                 
                 // Focus the last created skill
-                if (currentSkill !== skillItem) {
+                setTimeout(() => {
                     currentSkill.focus();
                     
                     // Place cursor at the end
@@ -550,18 +563,32 @@ class SectionManager {
                     range.collapse(false);
                     sel.removeAllRanges();
                     sel.addRange(range);
-                }
+                }, 10);
             }
         });
         
         // Handle paste events to split by commas
         skillItem.addEventListener('paste', (e) => {
-            e.preventDefault();
-            
-            // Get pasted text
             const pastedText = (e.clipboardData || window.clipboardData).getData('text');
+            
+            // Only handle special paste if it contains commas
             if (pastedText.includes(',')) {
+                e.preventDefault();
+                processingPaste = true;
+                
+                // Count the existing skills before paste for duplication check
+                const existingSkillCount = skillsList.querySelectorAll('.skill-item').length;
+                
+                // Find the position of this skill in the list
+                const skillsArray = Array.from(skillsList.querySelectorAll('.skill-item'));
+                const skillPosition = skillsArray.indexOf(skillItem);
+                
+                // Parse the pasted content
                 const parts = pastedText.split(',').map(part => part.trim()).filter(part => part);
+                const pastedItemCount = parts.length;
+                
+                // Expected total: existing skills, minus the one being replaced, plus new pasted parts
+                const expectedTotalSkills = existingSkillCount - 1 + pastedItemCount;
                 
                 if (parts.length > 0) {
                     // Set the first part to this skill
@@ -579,19 +606,61 @@ class SectionManager {
                     }
                     
                     // Focus the last created skill
-                    currentSkill.focus();
-                    
-                    // Place cursor at the end
-                    const range = document.createRange();
-                    const sel = window.getSelection();
-                    range.selectNodeContents(currentSkill);
-                    range.collapse(false);
-                    sel.removeAllRanges();
-                    sel.addRange(range);
+                    setTimeout(() => {
+                        // Check for duplications
+                        const actualSkillCount = skillsList.querySelectorAll('.skill-item').length;
+                        
+                        if (actualSkillCount > expectedTotalSkills) {
+                            // We have duplications! Remove the extras
+                            const extraCount = actualSkillCount - expectedTotalSkills;
+                            
+                            // We need to remove 'extraCount' skills after the pasted position
+                            const currentSkills = Array.from(skillsList.querySelectorAll('.skill-item'));
+                            
+                            // Calculate where the duplicates start
+                            // (original position + count of pasted items)
+                            const duplicatesStartAt = skillPosition + pastedItemCount;
+                            
+                            // Remove the duplicates
+                            for (let i = 0; i < extraCount; i++) {
+                                if (currentSkills[duplicatesStartAt + i]) {
+                                    currentSkills[duplicatesStartAt + i].remove();
+                                }
+                            }
+                        }
+                        
+                        // Now focus the proper skill based on the final structure
+                        const finalSkills = Array.from(skillsList.querySelectorAll('.skill-item'));
+                        const targetSkill = finalSkills[skillPosition + pastedItemCount - 1] || 
+                                           finalSkills[finalSkills.length - 1];
+                        
+                        if (targetSkill) {
+                            targetSkill.focus();
+                            
+                            // Place cursor at the end
+                            const range = document.createRange();
+                            const sel = window.getSelection();
+                            range.selectNodeContents(targetSkill);
+                            range.collapse(false);
+                            sel.removeAllRanges();
+                            sel.addRange(range);
+                        }
+                        
+                        // Reset the paste flag after everything is done
+                        setTimeout(() => {
+                            processingPaste = false;
+                        }, 100);
+                    }, 50); // Use a longer timeout to ensure DOM has updated
+                } else {
+                    processingPaste = false;
                 }
             } else {
                 // Just insert the text normally
+                e.preventDefault();
                 skillItem.textContent = pastedText;
+                
+                // Reset paste flag
+                processingPaste = false;
             }
         });
     }
