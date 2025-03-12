@@ -5,9 +5,10 @@ const puppeteer = require('puppeteer');
  * 
  * @param {string} htmlContent - The HTML content to convert to PDF
  * @param {string} cssContent - The CSS content to be included in the PDF
+ * @param {Object} options - Optional settings for PDF generation
  * @returns {Promise<Buffer>} The PDF as a buffer
  */
-async function generatePDF(htmlContent, cssContent) {
+async function generatePDF(htmlContent, cssContent, options = {}) {
   let browser = null;
   
   try {
@@ -42,7 +43,7 @@ async function generatePDF(htmlContent, cssContent) {
       timeout: 30000
     });
     
-    // Generate PDF with A4 size
+    // Generate PDF with A4 size and scaling to fit content on one page
     const pdfBuffer = await page.pdf({
       format: 'A4',
       printBackground: true,
@@ -51,7 +52,9 @@ async function generatePDF(htmlContent, cssContent) {
         right: '10mm',
         bottom: '10mm',
         left: '10mm'
-      }
+      },
+      scale: options.scale || 0.8, // Add scaling factor (0.8 is 80% of original size)
+      preferCSSPageSize: false
     });
     
     return pdfBuffer;

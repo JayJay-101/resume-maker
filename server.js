@@ -21,14 +21,14 @@ app.get('/', (req, res) => {
 // Generate PDF from HTML content
 app.post('/generate-pdf', async (req, res) => {
   try {
-    const { html, cssContent, filename = 'resume.pdf' } = req.body;
+    const { html, cssContent, filename = 'resume.pdf', scale = 0.8 } = req.body;
     
     if (!html) {
       return res.status(400).json({ error: 'HTML content is required' });
     }
 
-    // Generate PDF using Puppeteer
-    const pdfBuffer = await pdfGenerator.generatePDF(html, cssContent);
+    // Generate PDF using Puppeteer with the scale option
+    const pdfBuffer = await pdfGenerator.generatePDF(html, cssContent, { scale });
     
     // Set headers for PDF download
     res.setHeader('Content-Type', 'application/pdf');

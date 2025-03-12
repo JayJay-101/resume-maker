@@ -40,6 +40,7 @@ class ResumeEditor {
         document.getElementById('add-project-inline').addEventListener('click', () => this.sectionManager.addProject());
     }
 }
+
 // PdfGenerator class - handles PDF generation using server-side Puppeteer
 class PdfGenerator {
     constructor() {}
@@ -242,6 +243,14 @@ class ContentEditableManager {
 // SectionManager class - handles adding, removing, and managing resume sections
 class SectionManager {
     constructor() {
+        this.refreshContainers();
+        
+        // Store templates
+        this.templates = {};
+    }
+    
+    // NEW METHOD: Refresh container references after DOM changes
+    refreshContainers() {
         // Store references to section containers
         this.containers = {
             experience: document.getElementById('experience-container'),
@@ -251,9 +260,6 @@ class SectionManager {
             project: document.getElementById('project-container'),
             customSections: document.getElementById('custom-sections-container')
         };
-        
-        // Store templates
-        this.templates = {};
     }
     
     init() {
@@ -335,6 +341,9 @@ class SectionManager {
     }
     
     addCustomSection() {
+        // Refresh container references to ensure we have the latest DOM structure
+        this.refreshContainers();
+        
         // Create the custom section element
         const section = document.createElement('div');
         section.className = 'section custom-section';
@@ -374,8 +383,21 @@ class SectionManager {
         });
         section.appendChild(addButton);
         
-        // Add the section to the container
-        this.containers.customSections.appendChild(section);
+        // Check if customSections container exists and add the section
+        if (this.containers.customSections) {
+            this.containers.customSections.appendChild(section);
+        } else {
+            console.error('Custom sections container not found.');
+            // Try to find or create the container as a fallback
+            let customSectionsContainer = document.getElementById('custom-sections-container');
+            if (!customSectionsContainer) {
+                customSectionsContainer = document.createElement('div');
+                customSectionsContainer.id = 'custom-sections-container';
+                document.getElementById('right-column').appendChild(customSectionsContainer);
+                this.containers.customSections = customSectionsContainer;
+            }
+            customSectionsContainer.appendChild(section);
+        }
     }
     
     // Helper methods
@@ -706,6 +728,31 @@ class LayoutArrangementManager {
             if (allSections[key]) {
                 this.rightColumn.appendChild(allSections[key]);
             }
+        });
+        
+        // Create custom-sections-container in right column if it doesn't exist anymore
+        if (!document.getElementById('custom-sections-container')) {
+            const customSectionsContainer = document.createElement('div');
+            customSectionsContainer.id = 'custom-sections-container';
+            this.rightColumn.appendChild(customSectionsContainer);
+        }
+        
+        // Refresh container references in SectionManager after rearrangement
+        this.sectionManager.refreshContainers();
+        
+        // Re-bind event listeners to add buttons
+        document.querySelectorAll('.add-list-item').forEach(button => {
+            if (!button.hasAttribute('data-initialized')) {
+                button.setAttribute('data-initialized', 'true');
+                button.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    this.sectionManager.addListItem(button.parentNode);
+                });
+            }
+        });
+        
+        document.querySelectorAll('.skill-category').forEach(category => {
+            this.sectionManager.setupAddSkillButton(category);
         });
         
         // Exit arrangement mode
