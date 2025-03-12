@@ -1,5 +1,5 @@
 # Resume PDF Generator
-
+[buymecofee!](https://buymeacoffee.com/jaybuddyjay)
 A Node.js application that allows you to create, edit, and export professional resumes as PDF documents using a drag-and-drop interface.
 
 ## Features
