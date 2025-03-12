@@ -73,6 +73,15 @@ body {
     background-color: #0f766e;
 }
 
+.pdf-button {
+    margin-top: 12px;
+    background-color: #e11d48;
+}
+
+.pdf-button:hover {
+    background-color: #be123c;
+}
+
 /* Add Section Buttons with improved styling */
 .add-button {
     display: block;
@@ -549,14 +558,16 @@ li:before, .achievement-item:before {
     }
 
     .resume-container {
-        width: 100%;
-        height: auto;
-        box-shadow: none;
-        padding: 15mm;
-        border-radius: 0;
+        width: 100% !important;
+        height: auto !important;
+        box-shadow: none !important;
+        padding: 15mm !important;
+        border-radius: 0 !important;
+        margin: 0 !important;
     }
 
-    .editor-controls, .add-button, .delete-button, .add-skill-btn, .custom-title-input, .arrangement-overlay {
+    .editor-controls, .add-button, .delete-button, .add-skill-btn, 
+    .add-list-item, .custom-title-input, .arrangement-overlay {
         display: none !important;
     }
 
@@ -572,6 +583,9 @@ li:before, .achievement-item:before {
         -webkit-print-color-adjust: exact !important;
         color-adjust: exact !important;
         print-color-adjust: exact !important;
+        font-size: 16px !important;
+        margin-bottom: 8px !important;
+        padding-bottom: 4px !important;
     }
 
     /* Ensure all colors print properly */

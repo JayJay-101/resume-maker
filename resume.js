@@ -10,7 +10,8 @@ class ResumeEditor {
         this.dragDropManager = new DragDropManager(this.sectionManager);
         this.contentEditable = new ContentEditableManager();
         this.layoutArrangement = new LayoutArrangementManager(this.sectionManager);
-        
+        this.pdfManager = new PdfGenerator(); // Add PDF manager
+
         // Initialize components
         this.init();
     }
@@ -21,7 +22,8 @@ class ResumeEditor {
         this.sectionManager.init();
         this.dragDropManager.init();
         this.layoutArrangement.init();
-        
+        this.pdfManager.init(); // Initialize PDF manager
+
         // Set up event listeners for main buttons
         document.getElementById('add-experience').addEventListener('click', () => this.sectionManager.addExperience());
         document.getElementById('add-education').addEventListener('click', () => this.sectionManager.addEducation());
