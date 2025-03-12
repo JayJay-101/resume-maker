@@ -273,8 +273,19 @@ class SectionManager {
         // Initialize delete buttons
         document.querySelectorAll('.delete-button').forEach(button => this.setupDeleteButton(button));
         
-        // Initialize add skill buttons
-        document.querySelectorAll('.skill-category').forEach(category => this.setupAddSkillButton(category));
+        // Initialize add skill buttons and skill item events
+        document.querySelectorAll('.skill-category').forEach(category => {
+            this.setupAddSkillButton(category);
+            
+            // Initialize skill item events for existing skills
+            const skillsList = category.querySelector('.skills-list');
+            if (skillsList) {
+                const skillItems = skillsList.querySelectorAll('.skill-item');
+                skillItems.forEach((skill, index) => {
+                    this.setupSkillItemEvents(skill, index, skillsList);
+                });
+            }
+        });
         
         // Initialize add list item buttons
         this.setupAddListItemButtons();
@@ -322,6 +333,15 @@ class SectionManager {
         this.resetEditableContent(clone);
         this.setupAddSkillButton(clone);
         this.containers.skill.appendChild(clone);
+        
+        // Set up skill item events for the new category
+        const skillsList = clone.querySelector('.skills-list');
+        if (skillsList) {
+            const skillItems = skillsList.querySelectorAll('.skill-item');
+            skillItems.forEach((skill, index) => {
+                this.setupSkillItemEvents(skill, index, skillsList);
+            });
+        }
     }
     
     addProject() {
@@ -439,14 +459,141 @@ class SectionManager {
         if (addSkillBtn && skillsList) {
             addSkillBtn.addEventListener('click', () => this.addSkill(skillsList));
         }
+        
+        // Set up event listeners for all existing skills in this category
+        const existingSkills = skillsList ? skillsList.querySelectorAll('.skill-item') : [];
+        existingSkills.forEach((skill, index) => {
+            this.setupSkillItemEvents(skill, index, skillsList);
+        });
     }
     
-    addSkill(skillsList) {
+    addSkill(skillsList, text = 'New Skill', insertBefore = null) {
         const newSkill = document.createElement('span');
         newSkill.className = 'skill-item';
         newSkill.contentEditable = 'true';
-        newSkill.textContent = 'New Skill';
-        skillsList.appendChild(newSkill);
+        newSkill.textContent = text;
+        
+        // Insert at specific position or append
+        if (insertBefore) {
+            skillsList.insertBefore(newSkill, insertBefore);
+        } else {
+            skillsList.appendChild(newSkill);
+        }
+        
+        // Setup event listeners for the new skill
+        const index = Array.from(skillsList.querySelectorAll('.skill-item')).indexOf(newSkill);
+        this.setupSkillItemEvents(newSkill, index, skillsList);
+        
+        return newSkill;
+    }
+    
+    setupSkillItemEvents(skillItem, index, skillsList) {
+        // Handle backspace to delete empty skills (except the first one)
+        skillItem.addEventListener('keydown', (e) => {
+            if (e.key === 'Backspace' && skillItem.textContent.trim() === '' && index > 0) {
+                // Don't delete if it's the first skill
+                if (skillItem === skillsList.querySelector('.skill-item:first-child')) {
+                    return;
+                }
+                
+                e.preventDefault();
+                skillItem.remove();
+                
+                // Focus previous skill
+                const skills = skillsList.querySelectorAll('.skill-item');
+                if (skills.length > 0 && index > 0) {
+                    const prevSkill = index - 1 < skills.length ? skills[index - 1] : skills[skills.length - 1];
+                    prevSkill.focus();
+                    
+                    // Place cursor at the end
+                    const range = document.createRange();
+                    const sel = window.getSelection();
+                    range.selectNodeContents(prevSkill);
+                    range.collapse(false);
+                    sel.removeAllRanges();
+                    sel.addRange(range);
+                }
+            }
+        });
+        
+        // Handle comma to create new skills
+        skillItem.addEventListener('input', (e) => {
+            const content = skillItem.textContent;
+            if (content.includes(',')) {
+                e.preventDefault();
+                
+                const parts = content.split(',');
+                skillItem.textContent = parts[0].trim();
+                
+                // Create new skills for each part after the comma
+                let currentSkill = skillItem;
+                for (let i = 1; i < parts.length; i++) {
+                    const partText = parts[i].trim();
+                    if (partText) {
+                        const nextSkill = this.addSkill(
+                            skillsList, 
+                            partText, 
+                            currentSkill.nextElementSibling
+                        );
+                        currentSkill = nextSkill;
+                    }
+                }
+                
+                // Focus the last created skill
+                if (currentSkill !== skillItem) {
+                    currentSkill.focus();
+                    
+                    // Place cursor at the end
+                    const range = document.createRange();
+                    const sel = window.getSelection();
+                    range.selectNodeContents(currentSkill);
+                    range.collapse(false);
+                    sel.removeAllRanges();
+                    sel.addRange(range);
+                }
+            }
+        });
+        
+        // Handle paste events to split by commas
+        skillItem.addEventListener('paste', (e) => {
+            e.preventDefault();
+            
+            // Get pasted text
+            const pastedText = (e.clipboardData || window.clipboardData).getData('text');
+            if (pastedText.includes(',')) {
+                const parts = pastedText.split(',').map(part => part.trim()).filter(part => part);
+                
+                if (parts.length > 0) {
+                    // Set the first part to this skill
+                    skillItem.textContent = parts[0];
+                    
+                    // Create new skills for each additional part
+                    let currentSkill = skillItem;
+                    for (let i = 1; i < parts.length; i++) {
+                        const nextSkill = this.addSkill(
+                            skillsList, 
+                            parts[i], 
+                            currentSkill.nextElementSibling
+                        );
+                        currentSkill = nextSkill;
+                    }
+                    
+                    // Focus the last created skill
+                    currentSkill.focus();
+                    
+                    // Place cursor at the end
+                    const range = document.createRange();
+                    const sel = window.getSelection();
+                    range.selectNodeContents(currentSkill);
+                    range.collapse(false);
+                    sel.removeAllRanges();
+                    sel.addRange(range);
+                }
+            } else {
+                // Just insert the text normally
+                skillItem.textContent = pastedText;
+            }
+        });
     }
     
     resetEditableContent(element) {
@@ -751,8 +898,19 @@ class LayoutArrangementManager {
             }
         });
         
+        // Re-setup skill categories and their items
         document.querySelectorAll('.skill-category').forEach(category => {
+            // Setup the add skill button
             this.sectionManager.setupAddSkillButton(category);
+            
+            // Re-setup all skill items in this category
+            const skillsList = category.querySelector('.skills-list');
+            if (skillsList) {
+                const skillItems = skillsList.querySelectorAll('.skill-item');
+                skillItems.forEach((skill, index) => {
+                    this.sectionManager.setupSkillItemEvents(skill, index, skillsList);
+                });
+            }
         });
         
         // Exit arrangement mode
