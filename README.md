@@ -1,6 +1,7 @@
-# Resume PDF Generator
 [buymecofee!](https://buymeacoffee.com/jaybuddyjay)
-A Node.js application that allows you to create, edit, and export professional resumes as PDF documents using a drag-and-drop interface.
+# Resume PDF Generator
+
+A modular Node.js application that allows you to create, edit, and export professional resumes as PDF documents using a drag-and-drop interface. This project uses a component-based architecture for better maintainability and extensibility.
 
 ## Features
 
@@ -11,6 +12,8 @@ A Node.js application that allows you to create, edit, and export professional r
 - Add/remove experiences, education, skills, projects, and custom sections
 - Rearrange layout and organization of content
 - Professional typography and design
+- Smart skill tags with comma-separation and backspace deletion
+- Modular architecture for easy enhancement and maintenance
 
 ## Requirements
 
@@ -29,6 +32,14 @@ npm install
 
 ## Usage
 
+### Build the application
+
+```bash
+npm run build
+```
+
+This will bundle the JavaScript modules into a single file using webpack.
+
 ### Start the application
 
 ```bash
@@ -43,7 +54,7 @@ This will start the server at http://localhost:3000
 npm run dev
 ```
 
-This will start the server with nodemon for automatic restarts during development.
+This will start webpack in watch mode and the server with nodemon for automatic rebuilds and restarts during development.
 
 ## How to Use the Resume Editor
 
@@ -51,23 +62,85 @@ This will start the server with nodemon for automatic restarts during developmen
 2. Edit your resume by clicking on any text field
 3. Use the buttons in the top-right corner to add new sections
 4. Drag and drop sections to rearrange them using the "Arrange Layout" button
-5. Click "Download PDF" to export your resume as a PDF document
+5. Working with skill tags:
+   - Type text and press comma (,) to create a new skill tag
+   - Empty a skill tag and press backspace to delete it
+   - Paste comma-separated values to create multiple skill tags at once
+6. Click "Download PDF" to export your resume as a PDF document
 
 ## Project Structure
 
-- `server.js` - Express server setup
-- `pdfGenerator.js` - PDF generation logic using Puppeteer
-- `public/` - Client-side files
-  - `resume.html` - Main HTML template
-  - `resume.js` - Interactive editor functionality
-  - `styles.css` - Styling for the resume
-- `example.js` - Example usage of the PDF generator
+```
+resume-pdf-generator/
+├── public/                # Static files
+│   ├── resume.html        # Main HTML template
+│   └── styles.css         # CSS styling
+├── src/                   # Source code
+│   ├── components/        # UI components
+│   │   ├── sections/      # Resume section components
+│   │   │   ├── BaseSection.js     # Base class for all sections
+│   │   │   ├── Experience.js      # Experience section
+│   │   │   ├── Education.js       # Education section
+│   │   │   ├── Skills.js          # Skills section
+│   │   │   ├── Projects.js        # Projects section
+│   │   │   ├── Achievements.js    # Achievements section
+│   │   │   └── Custom.js          # Custom sections
+│   │   └── ResumeEditor.js        # Main editor component
+│   ├── constants/         # Application constants
+│   │   └── sectionTypes.js        # Section type definitions
+│   ├── managers/          # Feature managers
+│   │   ├── ContentManager.js      # Content editing functionality
+│   │   ├── DragDropManager.js     # Drag and drop functionality
+│   │   ├── LayoutManager.js       # Layout arrangement manager
+│   │   ├── PDFManager.js          # PDF generation manager
+│   │   └── SectionManager.js      # Section management
+│   ├── utils/             # Utility functions
+│   │   ├── dom.js                 # DOM manipulation helpers
+│   │   ├── events.js              # Event handling utilities
+│   │   └── templates.js           # HTML templates
+│   ├── styles/            # Component-specific styles
+│   │   └── main.css               # Main stylesheet
+│   └── index.js           # Application entry point
+├── pdfGenerator.js        # Server-side PDF generation with Puppeteer
+├── server.js              # Express server
+├── webpack.config.js      # Webpack configuration
+└── package.json           # Project configuration
+```
+
+## Architecture
+
+This project uses a modular component-based architecture to improve maintainability and extensibility:
+
+- **Components**: Encapsulate UI elements and their behavior
+- **Managers**: Handle specific features like content editing, PDF generation, etc.
+- **Utils**: Provide reusable utility functions
+- **Constants**: Store application-wide constants
+
+### Key Components:
+
+- **ResumeEditor**: Main application component that initializes and coordinates all other components
+- **Section Components**: Individual section types with specific behaviors
+- **SectionManager**: Handles the creation, deletion, and management of sections
+- **LayoutManager**: Manages the arrangement and positioning of sections
+- **PDFManager**: Handles PDF generation and downloading
 
 ## Technologies Used
 
-- Express.js - Web server
-- Puppeteer - Headless Chrome for PDF generation
-- JavaScript/HTML/CSS - Front-end editor
+- **Express.js**: Web server
+- **Webpack**: Module bundling
+- **Babel**: JavaScript transpiling
+- **Puppeteer**: Headless Chrome for PDF generation
+- **JavaScript/HTML/CSS**: Front-end implementation
+
+## Extending the Application
+
+To add a new feature or section type:
+
+1. Create a new component in the appropriate directory
+2. Import and register it in the related manager
+3. Add any necessary utility functions or constants
+4. Update the HTML template if needed
+5. Rebuild the application
 
 ## License
 
