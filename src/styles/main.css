@@ -1,0 +1,85 @@
+/**
+ * Main CSS file
+ * Import the external styles.css file and add any additional styles
+ */
+
+/* Import the original styles - this will be handled by webpack with css-loader */
+@import '../../public/styles.css';
+
+/* Add any additional styles or overrides here */
+.dragging {
+  opacity: 0.5;
+  border: 2px dashed #2563eb;
+}
+
+/* Improved focus styles for better accessibility */
+:focus {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
+[contenteditable="true"]:focus {
+  outline: 2px solid #2563eb;
+  outline-offset: 1px;
+}
+
+/* Additional hover effects for interactive elements */
+.editor-button:focus {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 10px rgba(37, 99, 235, 0.3);
+}
+
+/* Improved button accessibility */
+button, 
+.add-button, 
+.add-skill-btn, 
+.add-list-item {
+  cursor: pointer;
+}
+
+/* Animation for new items being added */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.experience-item,
+.education-item,
+.achievement-item,
+.skill-category,
+.project-item,
+.custom-item {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+/* Improved mobile responsiveness */
+@media (max-width: 768px) {
+  .resume-container {
+    padding: 10mm;
+  }
+  
+  .content {
+    flex-direction: column;
+  }
+  
+  .left-column,
+  .right-column {
+    width: 100%;
+  }
+  
+  .editor-controls {
+    position: sticky;
+    top: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  .editor-button {
+    font-size: 12px;
+    padding: 8px 10px;
+  }
+}
